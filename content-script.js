@@ -51,11 +51,7 @@ function redirectTwitter(url) {
     const sanitizedPathname = url.pathname.replace(/[<>'"]/g, '');
     const sanitizedSearch = url.search.replace(/[<>'"]/g, '');
     
-    if (url.host.split(".")[0] === "pbs") {
-      return `${instance}/pic/${encodeURIComponent(url.href)}`;
-    } else if (url.host.split(".")[0] === "video") {
-      return `${instance}/gif/${encodeURIComponent(url.href)}`;
-    } else if (sanitizedPathname.includes("tweets")) {
+    if (sanitizedPathname.includes("tweets")) {
       return `${instance}${sanitizedPathname.replace("/tweets", "")}${sanitizedSearch}`;
     } else {
       return `${instance}${sanitizedPathname}${sanitizedSearch}`;
