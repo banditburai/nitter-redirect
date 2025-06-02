@@ -1,12 +1,13 @@
 {
   "name": "Nitter Redirect",
-  "description": "Redirects Twitter requests to Nitter, the privacy friendly alternative.",
-  "version": "1.1.5",
+  "description": "Redirects Twitter/X requests to Nitter, the privacy friendly alternative.",
+  "version": "1.2.0",
   "manifest_version": 2,
   "background": {
     "scripts": ["background.js"],
-    "persistent": true
+    "persistent": false
   },
+  "content_security_policy": "script-src 'self'; object-src 'none';",
   "icons": {
     "48": "images/icon48.png",
     "128": "images/icon128.png"
@@ -17,6 +18,9 @@
         "*://twitter.com/*",
         "*://www.twitter.com/*",
         "*://mobile.twitter.com/*",
+        "*://x.com/*",
+        "*://www.x.com/*",
+        "*://mobile.x.com/*",
         "*://pbs.twimg.com/*",
         "*://video.twimg.com/*"
       ],
@@ -31,6 +35,9 @@
     "*://twitter.com/*",
     "*://www.twitter.com/*",
     "*://mobile.twitter.com/*",
+    "*://x.com/*",
+    "*://www.x.com/*",
+    "*://mobile.x.com/*",
     "*://pbs.twimg.com/*",
     "*://video.twimg.com/*"
   ],
@@ -43,7 +50,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "{513646f8-fb87-4135-a41e-4cf1d1ccccf2}"
+      "id": "{48b7c291-4ec6-4179-83cb-842631ec1fe9}"
     }
   }
 }
