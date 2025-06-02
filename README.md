@@ -1,14 +1,36 @@
 # ![nitter-redirect](images/icon32.png) Nitter Redirect
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/SimonBrazell/donate) [![Buy me a coffee](images/buy-me-a-coffee.png)](https://www.buymeacoffee.com/SimonBrazell)
+A privacy-focused browser extension that redirects Twitter/X requests to [Nitter](https://github.com/zedeus/nitter), the privacy-friendly Twitter frontend.
 
-[![Firefox Add-on](images/badge-amo.png)](https://addons.mozilla.org/en-US/firefox/addon/nitter-redirect/) [![Chrome Extension](images/badge-chrome.png)](https://chrome.google.com/webstore/detail/nitter-redirect/mohaicophfnifehkkkdbcejkflmgfkof)
+## Features
 
-A simple browser extension that redirects Twitter requests to [Nitter](https://github.com/zedeus/nitter) instead.
+- 🔒 **Enhanced Security** - Strict URL validation prevents open redirect attacks
+- 🆕 **X.com Support** - Redirects for both the Twitter and X.com domains
+- ✅ **Verified Instances** - Only uses verified, working Nitter instances
+- 🛡️ **Minimal Permissions** - Only requests necessary permissions for Twitter/X domains
+- 🚫 **No Tracking** - Removes Twitter/X service workers to prevent tracking
+- ⚡ **Lightweight** - Event-based background script for better performance
 
-No unnecessary permissions required, only listens for and redirects requests made to `twitter.com`, `www.twitter.com`, `mobile.twitter.com`, `pbs.twimg.com` & `video.twimg.com`, nothing else.
+## Supported URLs
 
-Allows for setting custom [Nitter instances](https://github.com/zedeus/nitter/wiki/Instances) and toggling redirects on & off.
+Redirects requests from:
+- `twitter.com`, `www.twitter.com`, `mobile.twitter.com`
+- `x.com`, `www.x.com`, `mobile.x.com`
+- `pbs.twimg.com` (images)
+- `video.twimg.com` (videos)
+
+## Security Improvements (v1.2.0)
+
+This fork includes significant security enhancements:
+- **Content Security Policy** enforced
+- **URL validation** to prevent malicious redirects
+- **Sanitized inputs** to prevent XSS attacks
+- **No console logging** of sensitive URLs
+- **Verified instance list** from official Nitter wiki
+
+## Verified Nitter Instances
+
+The extension uses only verified instances from the [official Nitter wiki](https://github.com/zedeus/nitter/wiki/Instances).
 
 ## Build
 
@@ -16,6 +38,20 @@ Allows for setting custom [Nitter instances](https://github.com/zedeus/nitter/wi
 2.  `web-ext build`
 3.  See `web-ext-artifacts/` for outputs.
 
+## Development
+
+```bash
+# Run in development mode
+web-ext run
+
+# Build for production
+web-ext build
+```
+
+## Credits
+
+This is a security-enhanced fork of [nitter-redirect](https://github.com/SimonBrazell/nitter-redirect) by Simon Brazell.
+
 ## License
 
-Code released under [the MIT license](LICENSE.txt).
+Code released under [the MIT license](LICENSE). Original work Copyright (c) 2019 Simon Brazell.
