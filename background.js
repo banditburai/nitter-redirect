@@ -17,7 +17,7 @@ const KNOWN_NITTER_DOMAINS = [
 let instance;
 let nitterDisabled;
 
-window.browser = window.browser || window.chrome;
+const browser = chrome;
 
 function isValidNitterInstance(url) {
   try {
@@ -40,19 +40,153 @@ function isValidNitterInstance(url) {
   }
 }
 
-browser.storage.sync.get(["nitterDisabled", "instance"], (result) => {
+async function updateRedirectRules() {
+  try {
+    console.log("[Nitter Redirect] Current instance:", instance);
+    console.log("[Nitter Redirect] Disabled:", nitterDisabled);
+    
+    // Always remove existing rules first
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: [1, 2, 3, 4, 5, 6]
+    });
+    
+    if (nitterDisabled || !instance || !isValidNitterInstance(instance)) {
+      console.log("[Nitter Redirect] Not adding rules - disabled or invalid instance");
+      return;
+    }
+
+    // Extract hostname from instance URL for transform
+    const instanceUrl = new URL(instance);
+    
+    const rules = [
+      {
+        id: 1,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            transform: {
+              scheme: "https",
+              host: instanceUrl.hostname
+            }
+          }
+        },
+        condition: {
+          urlFilter: "||twitter.com",
+          resourceTypes: ["main_frame", "sub_frame"]
+        }
+      },
+      {
+        id: 2,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            transform: {
+              scheme: "https",
+              host: instanceUrl.hostname
+            }
+          }
+        },
+        condition: {
+          urlFilter: "||www.twitter.com",
+          resourceTypes: ["main_frame", "sub_frame"]
+        }
+      },
+      {
+        id: 3,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            transform: {
+              scheme: "https",
+              host: instanceUrl.hostname
+            }
+          }
+        },
+        condition: {
+          urlFilter: "||x.com",
+          resourceTypes: ["main_frame", "sub_frame"]
+        }
+      },
+      {
+        id: 4,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            transform: {
+              scheme: "https",
+              host: instanceUrl.hostname
+            }
+          }
+        },
+        condition: {
+          urlFilter: "||www.x.com",
+          resourceTypes: ["main_frame", "sub_frame"]
+        }
+      },
+      {
+        id: 5,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            transform: {
+              scheme: "https",
+              host: instanceUrl.hostname
+            }
+          }
+        },
+        condition: {
+          urlFilter: "||mobile.twitter.com",
+          resourceTypes: ["main_frame", "sub_frame"]
+        }
+      },
+      {
+        id: 6,
+        priority: 1,
+        action: {
+          type: "redirect",
+          redirect: {
+            transform: {
+              scheme: "https",
+              host: instanceUrl.hostname
+            }
+          }
+        },
+        condition: {
+          urlFilter: "||mobile.x.com",
+          resourceTypes: ["main_frame", "sub_frame"]
+        }
+      }
+    ];
+
+    console.log("[Nitter Redirect] Adding rules:", JSON.stringify(rules, null, 2));
+    
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      addRules: rules
+    });
+    
+    console.log("[Nitter Redirect] Rules updated successfully");
+  } catch (error) {
+    console.error("[Nitter Redirect] Failed to update rules:", error);
+  }
+}
+
+browser.storage.sync.get(["nitterDisabled", "instance"], async (result) => {
   nitterDisabled = result.nitterDisabled;
-  // Validate stored instance before using
   if (result.instance && isValidNitterInstance(result.instance)) {
     instance = result.instance;
   } else {
     instance = nitterDefault;
   }
+  await updateRedirectRules();
 });
 
-browser.storage.onChanged.addListener(function (changes) {
+browser.storage.onChanged.addListener(async function (changes) {
   if ("instance" in changes) {
-    // Validate new instance before using
     const newInstance = changes.instance.newValue;
     if (newInstance && isValidNitterInstance(newInstance)) {
       instance = newInstance;
@@ -63,61 +197,5 @@ browser.storage.onChanged.addListener(function (changes) {
   if ("nitterDisabled" in changes) {
     nitterDisabled = changes.nitterDisabled.newValue;
   }
+  await updateRedirectRules();
 });
-
-function redirectTwitter(url) {
-  if (nitterDisabled || !instance) {
-    return null;
-  }
-  
-  try {
-    // Ensure we have a valid instance
-    if (!isValidNitterInstance(instance)) {
-      return null;
-    }
-    
-    // Sanitize pathname to prevent injection
-    const sanitizedPathname = url.pathname.replace(/[<>'"]/g, '');
-    const sanitizedSearch = url.search.replace(/[<>'"]/g, '');
-    
-    if (url.host.split(".")[0] === "pbs") {
-      // For image URLs, encode the entire URL properly
-      return `${instance}/pic/${encodeURIComponent(url.href)}`;
-    } else if (url.host.split(".")[0] === "video") {
-      // For video URLs, encode the entire URL properly
-      return `${instance}/gif/${encodeURIComponent(url.href)}`;
-    } else if (sanitizedPathname.includes("tweets")) {
-      // Remove /tweets from path
-      return `${instance}${sanitizedPathname.replace("/tweets", "")}${sanitizedSearch}`;
-    } else {
-      // Regular Twitter URLs
-      return `${instance}${sanitizedPathname}${sanitizedSearch}`;
-    }
-  } catch (e) {
-    // If any error occurs, don't redirect
-    return null;
-  }
-}
-
-browser.webRequest.onBeforeRequest.addListener(
-  (details) => {
-    const url = new URL(details.url);
-    let redirect;
-    redirect = { redirectUrl: redirectTwitter(url) };
-    // Logging removed for security - was exposing sensitive URLs
-    return redirect;
-  },
-  {
-    urls: [
-      "*://twitter.com/*",
-      "*://www.twitter.com/*",
-      "*://mobile.twitter.com/*",
-      "*://x.com/*",
-      "*://www.x.com/*",
-      "*://mobile.x.com/*",
-      "*://pbs.twimg.com/*",
-      "*://video.twimg.com/*",
-    ],
-  },
-  ["blocking"]
-);

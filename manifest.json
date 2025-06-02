@@ -2,12 +2,13 @@
   "name": "Nitter Redirect",
   "description": "Redirects Twitter/X requests to Nitter, the privacy friendly alternative.",
   "version": "1.2.0",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js"
   },
-  "content_security_policy": "script-src 'self'; object-src 'none';",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
   "icons": {
     "48": "images/icon48.png",
     "128": "images/icon128.png"
@@ -30,8 +31,9 @@
   ],
   "permissions": [
     "storage",
-    "webRequest",
-    "webRequestBlocking",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
     "*://twitter.com/*",
     "*://www.twitter.com/*",
     "*://mobile.twitter.com/*",
@@ -41,7 +43,14 @@
     "*://pbs.twimg.com/*",
     "*://video.twimg.com/*"
   ],
-  "browser_action": {
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "nitter_rules",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  },
+  "action": {
     "default_popup": "pages/popup/popup.html",
     "default_icon": {
       "48": "images/icon48.png",

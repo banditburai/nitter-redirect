@@ -17,7 +17,7 @@ const KNOWN_NITTER_DOMAINS = [
 let nitterDisabled;
 let instance;
 
-window.browser = window.browser || window.chrome;
+const browser = chrome;
 
 function isValidNitterInstance(url) {
   try {
