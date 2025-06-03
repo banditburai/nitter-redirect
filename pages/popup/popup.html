@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title></title>
+    <title>Nitter Redirect Settings</title>
     <link href="./popup.css" rel="stylesheet" />
   </head>
 
@@ -21,13 +21,14 @@
       <div class="onoffswitch switch" aria-label="Toggle Nitter redirects">
         <h1>Toggle Redirects</h1>
         <input
-          aria-hidden="true"
           name="toggleNitter"
           id="toggle-nitter"
           type="checkbox"
           checked
+          aria-describedby="toggle-description"
         />&nbsp;
-        <label for="toggle-nitter" class="checkbox-label"> </label>
+        <label for="toggle-nitter" class="checkbox-label" aria-label="Toggle Nitter redirect"> </label>
+        <span id="toggle-description" class="sr-only">Enable or disable redirecting Twitter/X links to Nitter</span>
       </div>
     </section>
 

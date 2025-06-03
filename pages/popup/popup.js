@@ -9,10 +9,18 @@ const elements = {
 
 // Validate required elements exist
 if (!elements.toggleNitter || !elements.instance || !elements.version) {
-  throw new Error('[Nitter Redirect] Required DOM elements not found');
+  const missing = [];
+  if (!elements.toggleNitter) missing.push('toggle switch');
+  if (!elements.instance) missing.push('instance input');
+  if (!elements.version) missing.push('version display');
+  throw new Error(`[Nitter Redirect] Required DOM elements not found: ${missing.join(', ')}`);
 }
 
 const browser = globalThis.chrome || globalThis.browser;
+
+// NOTE: These constants are duplicated in background.js and content-script.js
+// This is intentional to avoid script loading dependencies in a build-step-free extension
+// Any updates must be synchronized across all files
 
 // Strict validation for Nitter instances
 const VALID_NITTER_PATTERN = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -74,19 +82,22 @@ const debounce = (func, wait, immediate = false) => {
     timeout = setTimeout(later, wait);
     if (callNow) func(...args);
   };
-};;
+};
 
 const handleInstanceChange = debounce(async () => {
   try {
     if (elements.instance.value && elements.instance.checkValidity()) {
+      // Sanitize input before validation
+      const sanitizedValue = elements.instance.value.trim();
+      
       // Additional validation beyond HTML5 URL validation
-      if (isValidNitterInstance(elements.instance.value)) {
+      if (isValidNitterInstance(sanitizedValue)) {
         await browser.storage.sync.set({
-          instance: new URL(elements.instance.value).origin
+          instance: new URL(sanitizedValue).origin
         });
         elements.instance.setCustomValidity('');
       } else {
-        elements.instance.setCustomValidity('Please enter a valid HTTPS Nitter instance URL');
+        elements.instance.setCustomValidity('Please enter a valid HTTPS Nitter instance URL from the supported list');
         elements.instance.reportValidity();
       }
     } else if (!elements.instance.value) {

@@ -2,6 +2,10 @@
 
 const nitterDefault = "https://xcancel.com";
 
+// NOTE: These constants are duplicated in background.js and popup.js
+// This is intentional to avoid script loading dependencies in a build-step-free extension
+// Any updates must be synchronized across all files
+
 // Strict validation pattern for Nitter instances
 const VALID_NITTER_PATTERN = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 // Verified working instances from official Nitter wiki (as of 2025)
@@ -60,17 +64,17 @@ function redirectTwitter(url) {
       }
     }
     
-    // Sanitize and validate the final path
-    safePath = safePath.replace(/[<>'"&]/g, '');
-    
-    // Ensure path starts with /
-    if (!safePath.startsWith("/")) {
-      safePath = "/" + safePath;
+    // Use URL API to safely set path and search
+    try {
+      // Create a new URL to safely extract components
+      const safeUrl = new URL(url.href);
+      targetUrl.pathname = safeUrl.pathname;
+      targetUrl.search = safeUrl.search;
+    } catch (e) {
+      // Fallback to basic sanitization if URL construction fails
+      targetUrl.pathname = safePath.replace(/[<>'"&]/g, '');
+      targetUrl.search = url.search.replace(/[<>'"&]/g, '');
     }
-    
-    // Set the path and search safely
-    targetUrl.pathname = safePath;
-    targetUrl.search = url.search.replace(/[<>'"&]/g, '');
     
     return targetUrl.href;
   } catch (e) {

@@ -2,6 +2,10 @@
 
 const nitterDefault = "https://xcancel.com";
 
+// NOTE: These constants are duplicated in content-script.js and popup.js
+// This is intentional to avoid script loading dependencies in a build-step-free extension
+// Any updates must be synchronized across all files
+
 // Strict validation pattern for Nitter instances
 const VALID_NITTER_PATTERN = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 // Verified working instances from official Nitter wiki (as of 2025)
@@ -39,7 +43,7 @@ function isValidNitterInstance(url) {
 }
 
 // Domains to redirect to Nitter
-const TWITTER_DOMAINS = [
+const REDIRECT_DOMAINS = [
   "twitter.com",
   "www.twitter.com", 
   "x.com",
@@ -47,26 +51,6 @@ const TWITTER_DOMAINS = [
   "mobile.twitter.com",
   "mobile.x.com"
 ];
-
-function createRedirectRule(id, domain, instanceHostname) {
-  return {
-    id,
-    priority: 1,
-    action: {
-      type: "redirect",
-      redirect: {
-        transform: {
-          scheme: "https",
-          host: instanceHostname
-        }
-      }
-    },
-    condition: {
-      urlFilter: `||${domain}`,
-      resourceTypes: ["main_frame", "sub_frame"]
-    }
-  };
-}
 
 async function updateRedirectRules() {
   try {
@@ -87,15 +71,6 @@ async function updateRedirectRules() {
     const instanceUrl = new URL(instance);
     
     // Generate redirect rules for all target domains
-    const REDIRECT_DOMAINS = [
-      "twitter.com",
-      "www.twitter.com", 
-      "x.com",
-      "www.x.com",
-      "mobile.twitter.com",
-      "mobile.x.com"
-    ];
-    
     const createRedirectRule = (id, domain) => ({
       id,
       priority: 1,
