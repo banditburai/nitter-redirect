@@ -17,7 +17,7 @@ const KNOWN_NITTER_DOMAINS = [
 let instance;
 let nitterDisabled;
 
-const browser = chrome;
+const browser = globalThis.chrome || globalThis.browser;
 
 function isValidNitterInstance(url) {
   try {
@@ -30,14 +30,42 @@ function isValidNitterInstance(url) {
     if (!VALID_NITTER_PATTERN.test(url)) {
       return false;
     }
-    // Check against known domains
+    // Check against known domains - exact match only for security
     const hostname = urlObj.hostname;
-    return KNOWN_NITTER_DOMAINS.some(domain => 
-      hostname === domain || hostname.endsWith("." + domain)
-    );
+    return KNOWN_NITTER_DOMAINS.includes(hostname);
   } catch (e) {
     return false;
   }
+}
+
+// Domains to redirect to Nitter
+const TWITTER_DOMAINS = [
+  "twitter.com",
+  "www.twitter.com", 
+  "x.com",
+  "www.x.com",
+  "mobile.twitter.com",
+  "mobile.x.com"
+];
+
+function createRedirectRule(id, domain, instanceHostname) {
+  return {
+    id,
+    priority: 1,
+    action: {
+      type: "redirect",
+      redirect: {
+        transform: {
+          scheme: "https",
+          host: instanceHostname
+        }
+      }
+    },
+    condition: {
+      urlFilter: `||${domain}`,
+      resourceTypes: ["main_frame", "sub_frame"]
+    }
+  };
 }
 
 async function updateRedirectRules() {
@@ -58,110 +86,37 @@ async function updateRedirectRules() {
     // Extract hostname from instance URL for transform
     const instanceUrl = new URL(instance);
     
-    const rules = [
-      {
-        id: 1,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: {
-            transform: {
-              scheme: "https",
-              host: instanceUrl.hostname
-            }
-          }
-        },
-        condition: {
-          urlFilter: "||twitter.com",
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      },
-      {
-        id: 2,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: {
-            transform: {
-              scheme: "https",
-              host: instanceUrl.hostname
-            }
-          }
-        },
-        condition: {
-          urlFilter: "||www.twitter.com",
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      },
-      {
-        id: 3,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: {
-            transform: {
-              scheme: "https",
-              host: instanceUrl.hostname
-            }
-          }
-        },
-        condition: {
-          urlFilter: "||x.com",
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      },
-      {
-        id: 4,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: {
-            transform: {
-              scheme: "https",
-              host: instanceUrl.hostname
-            }
-          }
-        },
-        condition: {
-          urlFilter: "||www.x.com",
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      },
-      {
-        id: 5,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: {
-            transform: {
-              scheme: "https",
-              host: instanceUrl.hostname
-            }
-          }
-        },
-        condition: {
-          urlFilter: "||mobile.twitter.com",
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      },
-      {
-        id: 6,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: {
-            transform: {
-              scheme: "https",
-              host: instanceUrl.hostname
-            }
-          }
-        },
-        condition: {
-          urlFilter: "||mobile.x.com",
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      }
+    // Generate redirect rules for all target domains
+    const REDIRECT_DOMAINS = [
+      "twitter.com",
+      "www.twitter.com", 
+      "x.com",
+      "www.x.com",
+      "mobile.twitter.com",
+      "mobile.x.com"
     ];
+    
+    const createRedirectRule = (id, domain) => ({
+      id,
+      priority: 1,
+      action: {
+        type: "redirect",
+        redirect: {
+          transform: {
+            scheme: "https",
+            host: instanceUrl.hostname
+          }
+        }
+      },
+      condition: {
+        urlFilter: `||${domain}`,
+        resourceTypes: ["main_frame", "sub_frame"]
+      }
+    });
+    
+    const rules = REDIRECT_DOMAINS.map((domain, index) => 
+      createRedirectRule(index + 1, domain)
+    );
 
     console.log("[Nitter Redirect] Adding rules:", JSON.stringify(rules, null, 2));
     
